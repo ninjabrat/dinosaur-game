@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dinosaur Game with Vault Cheat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #game {
+            position: relative;
+            width: 600px;
+            height: 200px;
+            border: 1px solid black;
+            margin: 20px auto;
+            overflow: hidden;
+            background-color: #f7f7f7;
+        }
+        #dinosaur {
+            position: absolute;
+            bottom: 0;
+            left: 50px;
+            width: 50px;
+            height: 50px;
+            background-color: green;
+        }
+        .obstacle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 20px;
+            height: 50px;
+            background-color: red;
+            animation: moveObstacle 2s linear infinite;
+        }
+        @keyframes moveObstacle {
+            from {
+                right: 0;
+            }
+            to {
+                right: 100%;
+            }
+        }
+        #vault {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dinosaur Game</h1>
+    <div id="game">
+        <div id="dinosaur"></div>
+    </div>
+    <div id="vault">
+        <input type="password" id="vaultInput" placeholder="Enter vault code">
+        <button onclick="checkVault()">Submit</button>
+    </div>
+    <p id="cheatStatus">Cheat is OFF</p>
+    <script>
+        const dinosaur = document.getElementById('dinosaur');
+        const game = document.getElementById('game');
+        const cheatStatus = document.getElementById('cheatStatus');
+        let isJumping = false;
+        let isCheatEnabled = false;
+        let autoMoveInterval;
+
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space' && !isJumping) {
+                jump();
+            }
+        });
+
+        function jump() {
+            if (isJumping) return;
+            isJumping = true;
+            let jumpHeight = 0;
+            const jumpInterval = setInterval(() => {
+                if (jumpHeight >= 100) {
+                    clearInterval(jumpInterval);
+                    const fallInterval = setInterval(() => {
+                        if (jumpHeight <= 0) {
+                            clearInterval(fallInterval);
+                            isJumping = false;
+                        }
+                        jumpHeight -= 5;
+                        dinosaur.style.bottom = jumpHeight + 'px';
+                    }, 20);
+                }
+                jumpHeight += 5;
+                dinosaur.style.bottom = jumpHeight + 'px';
+            }, 20);
+        }
+
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            game.appendChild(obstacle);
+            obstacle.addEventListener('animationiteration', () => {
+                game.removeChild(obstacle);
+            });
+            if (isCheatEnabled) {
+                autoMoveInterval = setInterval(() => {
+                    if (isColliding(dinosaur, obstacle)) {
+                        jump();
+                    }
+                }, 20);
+            }
+        }
+
+        function isColliding(dino, obs) {
+            const dinoRect = dino.getBoundingClientRect();
+            const obsRect = obs.getBoundingClientRect();
+            return !(dinoRect.right < obsRect.left || 
+                     dinoRect.left > obsRect.right || 
+                     dinoRect.bottom < obsRect.top || 
+                     dinoRect.top > obsRect.bottom);
+        }
+
+        function checkVault() {
+            const vaultInput = document.getElementById('vaultInput').value;
+            if (vaultInput === '2025') {
+                isCheatEnabled = !isCheatEnabled;
+                cheatStatus.textContent = `Cheat is ${isCheatEnabled ? 'ON' : 'OFF'}`;
+                if (!isCheatEnabled && autoMoveInterval) {
+                    clearInterval(autoMoveInterval);
+                }
+            } else {
+                alert('Incorrect code');
+            }
+            document.getElementById('vaultInput').value = '';
+        }
+
+        setInterval(createObstacle, 2000);
+    </script>
+</body>
+</html>
